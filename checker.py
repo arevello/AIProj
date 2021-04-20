@@ -108,9 +108,11 @@ def generateRectInfill(size, density):
         for x in range(1,size+2):
             for y in range(1,size+2):
                 if edge(x, size) or edge(y, size) or edge(z, size):
-                    obj[z][x][y] = 100
+                    obj[z][x][y] = 1
                 if (x in rows) or (y in rows):
-                    obj[z][x][y] = 100
+                    obj[z][x][y] = 1
+                    
+    return obj
                     
 def generateGridInfill(size, density, slope):
     total = int(size * density)
@@ -118,7 +120,7 @@ def generateGridInfill(size, density, slope):
         
     rows = []
     
-    for i in range(0, total+1):
+    for i in range(-total, 2*total+1):
         rows.append(int(i * gap) + 1)
     print(rows)
     
@@ -127,16 +129,21 @@ def generateGridInfill(size, density, slope):
         for x in range(1,size+2):
             for y in range(1,size+2):
                 if edge(x, size) or edge(y, size) or edge(z, size):
-                    obj[z][x][y] = 100
-                if (x in rows) or (y in rows):
-                    obj[z][x][y] = 100
+                    obj[z][x][y] = 1
+                for r in rows:
+                    if ((int((x-1)*slope) + r == y) or (int((-1/slope)*(x-1)) + r == y)) and y != size + 1:
+                        obj[z][x][y] = 1
+                        break
+    return obj
             
 def generateInfill(vertpairs):
     #rect
-    generateRectInfill(100, .2)
+    o1 = generateRectInfill(100, .2)
     
     #grid
-    generateGridInfill(100, .2, 45)
+    o2 = generateGridInfill(100, .2, 1)
+    
+    print("")
     
 def getFace(axis, verts):
     allRet = []
