@@ -1,4 +1,7 @@
 import numpy as np
+from decimal import *
+
+granularity = .01
 
 class WavefrontOBJ:
     def __init__( self, default_mtl='default_mtl' ):
@@ -75,19 +78,89 @@ def save_obj( obj: WavefrontOBJ, filename: str ):
                 pstr += vstr
             ofile.write( pstr+'\n')
 
-def generateRectInfill(obj, density):
-    print("here")
+def edge(val, size):
+    return (val == 1 or val == size+1)
+
+def generateRectInfill(size, density):
+    '''verts = verts2.copy()
+    for i in range(len(verts)):
+        diff = abs(verts[i][0][axis] - verts[i][1][axis])
+        gap = (density * diff)
+        total = int(diff / density / 2)
+        max = verts[i][1][axis]
+        for j in range(total - 1):
+            val = round(max - ((j + 1) * gap), 2)
+            inp = [verts[i][0][0],verts[i][0][1],verts[i][0][2]]
+            inp[axis] = val
+            verts[i].insert(1,inp)
+        print(verts[i])'''
+        
+    total = int(size * density)
+    gap = int(size / total)
+        
+    rows = []
     
-def generateGridInfill(obj, density):
-    print("here2")
+    for i in range(1, total):
+        rows.append(int(i * gap) + 1)
+    
+    obj = np.zeros((size + 3,size + 3,size + 3), dtype=int)
+    for z in range(1,size+2):
+        for x in range(1,size+2):
+            for y in range(1,size+2):
+                if edge(x, size) or edge(y, size) or edge(z, size):
+                    obj[z][x][y] = 100
+                if (x in rows) or (y in rows):
+                    obj[z][x][y] = 100
+                    
+def generateGridInfill(size, density, slope):
+    total = int(size * density)
+    gap = int(size / total)
+        
+    rows = []
+    
+    for i in range(0, total+1):
+        rows.append(int(i * gap) + 1)
+    print(rows)
+    
+    obj = np.zeros((size + 3,size + 3,size + 3), dtype=int)
+    for z in range(1,size+2):
+        for x in range(1,size+2):
+            for y in range(1,size+2):
+                if edge(x, size) or edge(y, size) or edge(z, size):
+                    obj[z][x][y] = 100
+                if (x in rows) or (y in rows):
+                    obj[z][x][y] = 100
             
-def generateInfill(obj):
+def generateInfill(vertpairs):
     #rect
-    generateRectInfill(obj, .1)
+    generateRectInfill(100, .2)
     
     #grid
-    generateGridInfill(obj, .1)
+    generateGridInfill(100, .2, 45)
+    
+def getFace(axis, verts):
+    allRet = []
+    for i in range(len(verts)):
+        tempRet = []
+        if not verts[i] in allRet:
+            tempRet.append(verts[i])
+        for j in range(len(verts)):
+            if i != j:
+                if verts[i][axis] == verts[j][axis] and not verts[j] in allRet:
+                    tempRet.append(verts[j])
+        tempRet.sort()
+        if not tempRet in allRet:
+            allRet.append(tempRet)
+    return allRet
     
             
-load_obj("cube.obj")
+cube = load_obj("cube.obj")
 
+f = getFace(2,cube.vertices)
+infillInput = []
+for face in f:
+    f2 = getFace(1, face)
+    for i in f2:
+        infillInput.append(i)
+
+generateInfill(infillInput)
