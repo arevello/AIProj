@@ -1,5 +1,7 @@
 import numpy as np
 from decimal import *
+import copy
+import random
 
 granularity = .01
 
@@ -122,7 +124,6 @@ def generateGridInfill(size, density, slope):
     
     for i in range(-total, 2*total+1):
         rows.append(int(i * gap) + 1)
-    print(rows)
     
     obj = np.zeros((size + 3,size + 3,size + 3), dtype=int)
     for z in range(1,size+2):
@@ -138,12 +139,102 @@ def generateGridInfill(size, density, slope):
             
 def generateInfill(vertpairs):
     #rect
-    o1 = generateRectInfill(100, .2)
+    o1 = generateRectInfill(125, .2)
+    o1Mixup = copy.deepcopy(o1)
+    o1Mixup = mixupObj(o1Mixup, 125)
+    print("01 diff ",totalDiff(o1, o1Mixup, 125))
     
     #grid
-    o2 = generateGridInfill(100, .2, 1)
+    o2 = generateGridInfill(125, .2, 1)
+    o2Mixup = copy.deepcopy(o2)
+    o2Mixup = mixupObj(o2Mixup, 125)
+    print("02 diff ",totalDiff(o2, o2Mixup, 125))
     
     print("")
+    
+def mixupObj(obj, size):
+    for z in range(1, size+2):
+        for x in range(1, size+2):
+            for y in range(1, size+2):
+                r = random.randint(0,99)
+                if r < 10 and obj[z][x][y] == 1:
+                    obj[z][x][y] = 0
+                    x1 = random.randint(-1,1)
+                    y1 = random.randint(-1,1)
+                    z1 = random.randint(-1,1)
+                    obj[z + z1][x + x1][y + y1] = 1
+    return obj
+
+def outofrange(size, z1, x1, y1, z, x, y):
+    if z1 + z < 0 or z1 + z > size+2:
+        return true
+    elif x1 + x < 0 or x1 + x > size+2:
+        return true
+    elif y1 + y < 0 or y1 + y > size+2:
+        return true
+    return false
+
+def get5by5(obj, size, z1, x1, y1):
+    ret = np.zeros((5,5,5),dtype=int)
+    for z in range(-2,3):
+        for x in range(-2,3):
+            for y in range(-2,3):
+                if not outofrange(size, z1, x1, y1, z, x, y):
+                    ret[z+2][x+2][y+2] = obj[z1+z][x1+x][y1+y]
+    return ret
+
+def getStr5by5(inp):
+    smallTotal = 0
+    neighborStr = 0
+    for z in range(5):
+        for x in range(5):
+            for y in range(5):
+                if inp[z][x][y] == 1:
+                    tempNeighborStr = 0.0
+                    for z1 in range(-1,2):
+                        for x1 in range(-1,2):
+                            for y1 in range(-1,2):
+                                try:
+                                    if inp[z+z1][x+x1][y+y1] == 1:
+                                        planesInCommon = 0
+                                        if(z1 == 0):
+                                            planesInCommon += 1
+                                        if(x1 == 0):
+                                            planesInCommon += 1
+                                        if(y1 == 0):
+                                            planesInCommon += 1
+                                        
+                                        if planesInCommon == 0:
+                                            tempNeighborStr += 1
+                                        elif planesInCommon == 1:
+                                            tempNeighborStr += 4
+                                        else:
+                                            tempNeighborStr += 16
+                                except IndexError:
+                                    continue
+                    neighborStr += tempNeighborStr
+                    smallTotal += 1
+                    
+    str = smallTotal/125
+    return neighborStr
+
+# testStr = np.zeros((5,5,5),dtype=int)
+# for z in range(5):
+#     for x in range(5):
+#         for y in range(5):
+#             testStr[z][x][y] = 1
+# 
+# print(getStr5by5(testStr))
+# exit()
+
+def totalDiff(og, o2, size):
+    diff = 0
+    for z in range(1, size+2):
+        for x in range(1, size+2):
+            for y in range(1, size+2):
+                if(og[z][x][y] != o2[z][x][y]):
+                    diff += 1
+    return diff
     
 def getFace(axis, verts):
     allRet = []
