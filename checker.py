@@ -81,7 +81,7 @@ def save_obj( obj: WavefrontOBJ, filename: str ):
             ofile.write( pstr+'\n')
 
 def edge(val, size):
-    return (val == 1 or val == size+1)
+    return (val == 1 or val == size)
 
 def generateRectInfill(size, density):
     '''verts = verts2.copy()
@@ -105,10 +105,10 @@ def generateRectInfill(size, density):
     for i in range(1, total):
         rows.append(int(i * gap) + 1)
     
-    obj = np.zeros((size + 3,size + 3,size + 3), dtype=int)
-    for z in range(1,size+2):
-        for x in range(1,size+2):
-            for y in range(1,size+2):
+    obj = np.zeros((size + 2,size + 2,size + 2), dtype=int)
+    for z in range(1,size+1):
+        for x in range(1,size+1):
+            for y in range(1,size+1):
                 if edge(x, size) or edge(y, size) or edge(z, size):
                     obj[z][x][y] = 1
                 if (x in rows) or (y in rows):
@@ -125,7 +125,7 @@ def generateGridInfill(size, density, slope):
     for i in range(-total, 2*total+1):
         rows.append(int(i * gap) + 1)
     
-    obj = np.zeros((size + 3,size + 3,size + 3), dtype=int)
+    obj = np.zeros((size + 2,size + 2,size + 2), dtype=int)
     for z in range(1,size+2):
         for x in range(1,size+2):
             for y in range(1,size+2):
@@ -151,11 +151,27 @@ def generateInfill(vertpairs):
     print("02 diff ",totalDiff(o2, o2Mixup, 125))
     
     print("")
+
+def getObjStr(o1):
+    oTemp = o1[1:126,1:126,1:126]
+    for i in range(2):
+        ret = np.zeros((int(len(oTemp)/5),int(len(oTemp)/5),int(len(oTemp)/5)),dtype=int)
+        for z in range(int(len(oTemp)/5)):
+            for x in range(int(len(oTemp)/5)):
+                for y in range(int(len(oTemp)/5)):
+                    temp5by5 = get5by5(oTemp, len(oTemp), z*5, x*5, y*5)
+                    if i == 0:
+                        strVal = getStr5by5(temp5by5)
+                    else:
+                        strVal = np.average(temp5by5)
+                    ret[z][x][y] = strVal
+        oTemp = ret
+    return getStr5by5(oTemp)
     
 def mixupObj(obj, size):
-    for z in range(1, size+2):
-        for x in range(1, size+2):
-            for y in range(1, size+2):
+    for z in range(1, size+1):
+        for x in range(1, size+1):
+            for y in range(1, size+1):
                 r = random.randint(0,99)
                 if r < 10 and obj[z][x][y] == 1:
                     obj[z][x][y] = 0
@@ -167,12 +183,12 @@ def mixupObj(obj, size):
 
 def outofrange(size, z1, x1, y1, z, x, y):
     if z1 + z < 0 or z1 + z > size+2:
-        return true
+        return True
     elif x1 + x < 0 or x1 + x > size+2:
-        return true
+        return True
     elif y1 + y < 0 or y1 + y > size+2:
-        return true
-    return false
+        return True
+    return False
 
 def get5by5(obj, size, z1, x1, y1):
     ret = np.zeros((5,5,5),dtype=int)
