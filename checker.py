@@ -151,6 +151,35 @@ def generateInfill(vertpairs):
     print("02 diff ",totalDiff(o2, o2Mixup, 125))
     
     print("")
+    
+#every time there is a shift over there is a chance that there will be a mechanical error resulting in a skipped spot, but unknown to design
+#upon reaching the end of the row or column, it will be discovered that the end has been reached, but there is still data left to print, 
+#this will lead to recalculating the str of the object and then determining if the differences will cause significant str changes
+def buildObject(obj, size):
+    newObj = np.zeros((size + 2,size + 2,size + 2), dtype=int)
+    cost = 0
+    for z in range(1, size+1):
+        for x in range(1, size+1):
+            for y in range(1, size+1):
+                r = random.randint(0,99)
+                yModifier = 0
+                if r < 5:
+                    yModifier = 1
+                obj[z][x][y] = 0
+                newObj[z][x][y + yModifier] = 1
+                cost += 1
+                if yModifier == 1:
+                    putInNew = testRestOfObjForStr(obj, newObj, z, x, y, size)
+                    if putInNew:
+                        cost += 6
+                        newObj[z][x][y] = 1
+
+def testRestOfObjForStr(obj, newObj, z, x, y, size):
+    newObj[z][x][y+2:size+1] = obj[z][x][y+2:size+1]
+    newObj[z][x:size+1][0:size+1] = obj[z][x:size+1][0:size+1]
+    newObj[z:size+1][0:size+1][0:size+1] = obj[z:size+1][0:size+1][0:size+1]
+    str = getObjStr(newObj)
+    strOld = getObjStr(obj)
 
 def getObjStr(o1):
     oTemp = o1[1:126,1:126,1:126]
