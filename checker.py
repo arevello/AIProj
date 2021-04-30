@@ -140,9 +140,12 @@ def generateGridInfill(size, density, slope):
 def generateInfill(vertpairs):
     #rect
     o1 = generateRectInfill(125, .2)
-    o1Mixup = copy.deepcopy(o1)
-    o1Mixup = mixupObj(o1Mixup, 125)
-    print("01 diff ",totalDiff(o1, o1Mixup, 125))
+#     o1Mixup = copy.deepcopy(o1)
+#     o1Mixup = mixupObj(o1Mixup, 125)
+#     print("01 diff ",totalDiff(o1, o1Mixup, 125))
+
+    buildObject(o1, 125)
+    exit()
     
     #grid
     o2 = generateGridInfill(125, .2, 1)
@@ -165,7 +168,7 @@ def buildObject(obj, size):
                 yModifier = 0
                 if r < 5:
                     yModifier = 1
-                obj[z][x][y] = 0
+                newObj[z][x][y] = 0
                 newObj[z][x][y + yModifier] = 1
                 cost += 1
                 if yModifier == 1:
@@ -175,11 +178,13 @@ def buildObject(obj, size):
                         newObj[z][x][y] = 1
 
 def testRestOfObjForStr(obj, newObj, z, x, y, size):
-    newObj[z][x][y+2:size+1] = obj[z][x][y+2:size+1]
-    newObj[z][x:size+1][0:size+1] = obj[z][x:size+1][0:size+1]
-    newObj[z:size+1][0:size+1][0:size+1] = obj[z:size+1][0:size+1][0:size+1]
+    newObj[z][x][y+2:size+2] = obj[z][x][y+2:size+2]
+    newObj[z][x:size+2][0:size+2] = obj[z][x:size+2][0:size+2]
+    newObj[z:size+2][0:size+2][0:size+2] = obj[z:size+2][0:size+2][0:size+2]
     str = getObjStr(newObj)
     strOld = getObjStr(obj)
+    print("strength with flaw ", str, " str w/o flaw ", strOld)
+    return True
 
 def getObjStr(o1):
     oTemp = o1[1:126,1:126,1:126]
@@ -195,7 +200,7 @@ def getObjStr(o1):
                         strVal = np.average(temp5by5)
                     ret[z][x][y] = strVal
         oTemp = ret
-    return getStr5by5(oTemp)
+    return np.sum(oTemp)
     
 def mixupObj(obj, size):
     for z in range(1, size+1):
