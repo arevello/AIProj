@@ -133,8 +133,10 @@ class Network(object):
 #### Miscellaneous functions
 def sigmoid(z):
     """The sigmoid function."""
-    return 1.0/(1.0+np.exp(-z))
+    #return 1.0/(1.0+np.exp(-z))
+    return np.maximum(z,0)
 
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
-    return sigmoid(z)*(1-sigmoid(z))
+    #return sigmoid(z)*(1-sigmoid(z))
+    return 0
