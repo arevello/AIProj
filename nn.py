@@ -6,6 +6,8 @@ import network
 import numpy as np
 import math
 
+random.seed(0)
+
 def generateDataset(sz, testData=False):
     dset = []
     for i in range(1,25):
@@ -55,7 +57,7 @@ train = generateDataset(10000)
 
 test = generateDataset(2000, True)
 
-net = network.Network([25, 15, 2])
+net = network.Network([25, 10, 2])
 
 net.SGD(train, 10, 40, 3.0, test)
     

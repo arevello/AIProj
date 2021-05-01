@@ -145,13 +145,13 @@ def generateInfill(vertpairs):
 #     print("01 diff ",totalDiff(o1, o1Mixup, 125))
 
     buildObject(o1, 125)
-    exit()
     
     #grid
     o2 = generateGridInfill(125, .2, 1)
-    o2Mixup = copy.deepcopy(o2)
-    o2Mixup = mixupObj(o2Mixup, 125)
-    print("02 diff ",totalDiff(o2, o2Mixup, 125))
+    buildObject(o2,125)
+    #o2Mixup = copy.deepcopy(o2)
+    #o2Mixup = mixupObj(o2Mixup, 125)
+    #print("02 diff ",totalDiff(o2, o2Mixup, 125))
     
     print("")
     
@@ -161,33 +161,40 @@ def generateInfill(vertpairs):
 def buildObject(obj, size):
     newObj = np.zeros((size + 2,size + 2,size + 2), dtype=int)
     cost = 0
+    amtFlaws = 0
     for z in range(1, size+1):
         for x in range(1, size+1):
             for y in range(1, size+1):
                 r = random.randint(0,99)
                 yModifier = 0
-                if r < 5:
+                if r < 1:
                     yModifier = 1
                 newObj[z][x][y] = 0
                 newObj[z][x][y + yModifier] = 1
                 cost += 1
                 if yModifier == 1:
                     putInNew = testRestOfObjForStr(obj, newObj, z, x, y, size)
+                    amtFlaws += 1
                     if putInNew:
-                        cost += 6
+                        cost += 7
                         newObj[z][x][y] = 1
+                y+= yModifier
+    print("object cost to build was",cost,"supposed to be",size*size*size,"but had to correct",amtFlaws,"flaws")
 
 def testRestOfObjForStr(obj, newObj, z, x, y, size):
+    strThresh = 5
     newObj[z][x][y+2:size+2] = obj[z][x][y+2:size+2]
     newObj[z][x:size+2][0:size+2] = obj[z][x:size+2][0:size+2]
     newObj[z:size+2][0:size+2][0:size+2] = obj[z:size+2][0:size+2][0:size+2]
-    str = getObjStr(newObj)
-    strOld = getObjStr(obj)
+    str = getObjStr(newObj,size)
+    strOld = getObjStr(obj,size)
     print("strength with flaw ", str, " str w/o flaw ", strOld)
-    return True
+    if strOld - str < strThresh and strOld > str:
+        return True
+    return False
 
-def getObjStr(o1):
-    oTemp = o1[1:126,1:126,1:126]
+def getObjStr(o1,size):
+    oTemp = o1[1:size+1,1:size+1,1:size+1]
     for i in range(2):
         ret = np.zeros((int(len(oTemp)/5),int(len(oTemp)/5),int(len(oTemp)/5)),dtype=int)
         for z in range(int(len(oTemp)/5)):
@@ -197,7 +204,7 @@ def getObjStr(o1):
                     if i == 0:
                         strVal = getStr5by5(temp5by5)
                     else:
-                        strVal = np.average(temp5by5)
+                        strVal = np.sum(temp5by5)
                     ret[z][x][y] = strVal
         oTemp = ret
     return np.sum(oTemp)
