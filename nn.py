@@ -8,6 +8,7 @@ import math
 
 random.seed(0)
 
+#generate 5x5 images of random values and score if they are stable or not based on all nodes inside having neighbors
 def generateDataset(sz, testData=False):
     dset = []
     for i in range(1,25):

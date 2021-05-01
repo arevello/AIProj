@@ -79,10 +79,13 @@ def save_obj( obj: WavefrontOBJ, filename: str ):
                 vstr = vstr.replace('/X/','//').replace('/X ', ' ')
                 pstr += vstr
             ofile.write( pstr+'\n')
+#courtesy of http://jamesgregson.ca/loadsave-wavefront-obj-files-in-python.html
 
+#check if value is an edge
 def edge(val, size):
     return (val == 1 or val == size)
 
+#generates 3d object a square infill with given density
 def generateRectInfill(size, density):
     '''verts = verts2.copy()
     for i in range(len(verts)):
@@ -115,7 +118,8 @@ def generateRectInfill(size, density):
                     obj[z][x][y] = 1
                     
     return obj
-                    
+           
+#generates 3d object an x shaped infill with given density         
 def generateGridInfill(size, density, slope):
     total = int(size * density)
     gap = int(size / total)
@@ -137,6 +141,7 @@ def generateGridInfill(size, density, slope):
                         break
     return obj
             
+#tests to be run for all values
 def generateInfill(vertpairs):
     #rect
     o1 = generateRectInfill(125, .2)
@@ -155,8 +160,7 @@ def generateInfill(vertpairs):
     
     print("")
     
-#every time there is a shift over there is a chance that there will be a mechanical error resulting in a skipped spot, but unknown to design
-#upon reaching the end of the row or column, it will be discovered that the end has been reached, but there is still data left to print, 
+#every time there is a shift over there is a chance that there will be a mechanical error resulting in a skipped spot, 
 #this will lead to recalculating the str of the object and then determining if the differences will cause significant str changes
 def buildObject(obj, size):
     newObj = np.zeros((size + 2,size + 2,size + 2), dtype=int)
@@ -181,6 +185,7 @@ def buildObject(obj, size):
                 y+= yModifier
     print("object cost to build was",cost,"supposed to be",size*size*size,"but had to correct",amtFlaws,"flaws")
 
+#assuming no other printing errors will occur copy the rest of the object to the current object and compare strengths
 def testRestOfObjForStr(obj, newObj, z, x, y, size):
     strThresh = 5
     newObj[z][x][y+2:size+2] = obj[z][x][y+2:size+2]
@@ -193,6 +198,7 @@ def testRestOfObjForStr(obj, newObj, z, x, y, size):
         return True
     return False
 
+#get the strength of a full object
 def getObjStr(o1,size):
     oTemp = o1[1:size+1,1:size+1,1:size+1]
     for i in range(2):
@@ -209,6 +215,7 @@ def getObjStr(o1,size):
         oTemp = ret
     return np.sum(oTemp)
     
+#shuffle object
 def mixupObj(obj, size):
     for z in range(1, size+1):
         for x in range(1, size+1):
@@ -222,6 +229,7 @@ def mixupObj(obj, size):
                     obj[z + z1][x + x1][y + y1] = 1
     return obj
 
+#range check
 def outofrange(size, z1, x1, y1, z, x, y):
     if z1 + z < 0 or z1 + z > size+2:
         return True
@@ -231,6 +239,7 @@ def outofrange(size, z1, x1, y1, z, x, y):
         return True
     return False
 
+#get a 5x5x5 partial object at given indices
 def get5by5(obj, size, z1, x1, y1):
     ret = np.zeros((5,5,5),dtype=int)
     for z in range(-2,3):
@@ -240,6 +249,7 @@ def get5by5(obj, size, z1, x1, y1):
                     ret[z+2][x+2][y+2] = obj[z1+z][x1+x][y1+y]
     return ret
 
+#calculate the str of a 5x5x5 object
 def getStr5by5(inp):
     smallTotal = 0
     neighborStr = 0
@@ -284,6 +294,7 @@ def getStr5by5(inp):
 # print(getStr5by5(testStr))
 # exit()
 
+#measure differences between 2 objects
 def totalDiff(og, o2, size):
     diff = 0
     for z in range(1, size+2):
@@ -293,6 +304,7 @@ def totalDiff(og, o2, size):
                     diff += 1
     return diff
     
+#get diffreent faces of an obj file
 def getFace(axis, verts):
     allRet = []
     for i in range(len(verts)):
